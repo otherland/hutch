@@ -1,4 +1,13 @@
-"""FastMCP server: 16 tools for multi-agent coordination."""
+"""Hutch — 16 MCP tools for multi-agent coordination.
+
+Helpers      32-112    _utcnow, _err, _ctx, resolution & reservation helpers
+MCP setup   114-141    FastMCP instance, lifespan, _tool decorator
+Project     143-163    ensure_project
+Agents      165-219    register_agent, list_agents
+Messaging   221-416    send/reply/fetch/ack/search
+Files       418-517    reserve/release/check/list reservations
+Context     519-563    store/get/list context blobs
+"""
 from __future__ import annotations
 
 import fnmatch
@@ -193,6 +202,20 @@ async def register_agent(
             "SELECT * FROM agents WHERE project_id = ? AND name = ? COLLATE NOCASE", (pid, name)
         )
         return dict(await cur.fetchone())
+
+
+@_tool
+async def list_agents(project_key: str, active_since: str | None = None) -> dict:
+    """List registered agents in a project."""
+    async with _ctx(project_key) as (conn, project):
+        sql = ("SELECT name, program, model, task_description, last_active_at "
+               "FROM agents WHERE project_id = ?")
+        params: list[Any] = [project["id"]]
+        if active_since:
+            sql += " AND last_active_at > ?"
+            params.append(active_since)
+        cur = await conn.execute(sql + " ORDER BY last_active_at DESC", params)
+        return {"agents": [dict(r) for r in await cur.fetchall()]}
 
 
 @_tool
@@ -468,20 +491,6 @@ async def release_file_reservations(
         else:
             cur = await conn.execute(base, (now, pid, aid, now))
         return {"released": cur.rowcount}
-
-
-@_tool
-async def list_agents(project_key: str, active_since: str | None = None) -> dict:
-    """List registered agents in a project."""
-    async with _ctx(project_key) as (conn, project):
-        sql = ("SELECT name, program, model, task_description, last_active_at "
-               "FROM agents WHERE project_id = ?")
-        params: list[Any] = [project["id"]]
-        if active_since:
-            sql += " AND last_active_at > ?"
-            params.append(active_since)
-        cur = await conn.execute(sql + " ORDER BY last_active_at DESC", params)
-        return {"agents": [dict(r) for r in await cur.fetchall()]}
 
 
 @_tool
