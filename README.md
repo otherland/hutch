@@ -8,7 +8,7 @@
 
 ## The problem
 
-You're running four Claude Code sessions against the same repo. One is refactoring the auth module. Another is writing tests for it. A third is updating the API routes that import it. None of them know the others exist.
+You're running four AI coding agents against the same repo. Claude Code, Codex, Copilot, Cursor — doesn't matter which. One is refactoring the auth module. Another is writing tests for it. A third is updating the API routes that import it. None of them know the others exist.
 
 Session two overwrites session one's changes. Session three imports a function that session one just renamed. Session four force-pushes over all of it. You spend an hour untangling the merge.
 
@@ -40,19 +40,21 @@ hutch
 # → Hutch MCP server on http://127.0.0.1:8765
 ```
 
-Point your agents at it. Add to `.claude/settings.json`, `.cursor/mcp.json`, or equivalent:
+Then point your agents at it. Hutch speaks MCP, so any agent that supports MCP servers can connect.
 
+**Claude Code** — `.claude/settings.json`:
 ```json
-{
-  "mcpServers": {
-    "hutch": {
-      "url": "http://127.0.0.1:8765/mcp"
-    }
-  }
-}
+{ "mcpServers": { "hutch": { "url": "http://127.0.0.1:8765/mcp" } } }
 ```
 
-Then paste the [agent instructions](#agent-instructions) into your project's `CLAUDE.md`.
+**Cursor** — `.cursor/mcp.json`:
+```json
+{ "mcpServers": { "hutch": { "url": "http://127.0.0.1:8765/mcp" } } }
+```
+
+**Codex / Copilot / any MCP client** — point it at `http://127.0.0.1:8765/mcp`.
+
+Then paste the [agent instructions](#agent-instructions) into your project's `CLAUDE.md`, `AGENTS.md`, or equivalent system prompt.
 
 ## Tools
 
@@ -80,7 +82,7 @@ Then paste the [agent instructions](#agent-instructions) into your project's `CL
 Agent 1 (SilentOwl)                          Agent 2 (GreenLake)
 ───────────────────                          ───────────────────
 ensure_project("/repo")                      ensure_project("/repo")
-register_agent(program="claude-code")        register_agent(program="claude-code")
+register_agent(program="claude-code")        register_agent(program="codex")
 
 file_reservation_paths(                      fetch_inbox()
   paths=["src/auth/*.py"],                    → "SilentOwl is refactoring auth"
@@ -118,7 +120,7 @@ That's it. No config files, no tokens, no setup.
 
 ## Agent instructions
 
-Paste this into your project's `CLAUDE.md` or `AGENTS.md`:
+Paste this into your project's `CLAUDE.md`, `AGENTS.md`, or system prompt:
 
 ```markdown
 ## Hutch — agent coordination
