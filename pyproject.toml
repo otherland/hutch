@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.scripts]
-hutch = "hutch.__main__:mcp.run"
+hutch = "hutch.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/otherland/hutch"

@@ -1,6 +1,14 @@
+<p align="center">
+  <img src="hero.jpg" alt="Hutch — where agents talk to each other" width="100%">
+</p>
+
 # Hutch
 
 *A small enclosure where agents talk to each other.*
+
+[![Tests](https://github.com/otherland/hutch/actions/workflows/test.yml/badge.svg)](https://github.com/otherland/hutch/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/hutch)](https://pypi.org/project/hutch/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 [The problem](#the-problem) · [How it works](#how-it-works) · [Install](#install) · [Tools](#tools) · [Configuration](#configuration) · [MIT License](LICENSE)
 
