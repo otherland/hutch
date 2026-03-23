@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hutch"
+version = "0.1.0"
+description = "Lightweight multi-agent coordination over MCP. Messaging, file reservations, and shared context in ~800 lines."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["mcp", "agents", "coordination", "messaging", "multi-agent"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "fastmcp>=2.0.0",
+    "aiosqlite>=0.20.0",
+    "uvicorn>=0.30.0",
+]
+
+[project.scripts]
+hutch = "hutch.__main__:mcp.run"
+
+[project.urls]
+Homepage = "https://github.com/otherland/hutch"
+Repository = "https://github.com/otherland/hutch"
+Issues = "https://github.com/otherland/hutch/issues"
