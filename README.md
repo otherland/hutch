@@ -1,24 +1,29 @@
-# mcp-agent-mail-lite
+# Hutch
 
-The coordination primitive from [mcp_agent_mail](https://github.com/Dicklesworthstone/mcp_agent_mail) (30K LOC), distilled to 869 lines.
+Lightweight multi-agent coordination over MCP. Messaging, file reservations, and shared context in ~800 lines.
 
-Gives coding agents **identities**, **inboxes**, **file reservations**, **search**, and a **context store** over a single SQLite database. Designed to pair with [Beads Rust](https://github.com/Dicklesworthstone/beads_rust) for task planning.
+Inspired by [mcp_agent_mail](https://github.com/Dicklesworthstone/mcp_agent_mail) (30K LOC) — this is the coordination primitive, distilled.
 
 ## Install & run
 
 ```bash
-pip install fastmcp aiosqlite uvicorn
-python -m mcp_agent_mail_lite
+pip install hutch
+hutch
 # → FastMCP server on http://127.0.0.1:8765
+```
+
+Or run as a module:
+
+```bash
+python -m hutch
 ```
 
 Configure with environment variables:
 
 ```bash
-export MCP_AGENT_MAIL_DB_PATH=./agent_mail.db  # default
-export MCP_AGENT_MAIL_HOST=127.0.0.1           # default
-export MCP_AGENT_MAIL_PORT=8765                 # default
-export MCP_AGENT_MAIL_TOKEN=                    # optional bearer token
+export HUTCH_DB_PATH=./hutch.db   # default
+export HUTCH_HOST=127.0.0.1       # default
+export HUTCH_PORT=8765             # default
 ```
 
 ## Wire up your agents
@@ -28,7 +33,7 @@ Add to your `.claude/settings.json`, `.cursor/mcp.json`, or equivalent:
 ```json
 {
   "mcpServers": {
-    "agent-mail": {
+    "hutch": {
       "url": "http://127.0.0.1:8765/mcp"
     }
   }
@@ -37,7 +42,7 @@ Add to your `.claude/settings.json`, `.cursor/mcp.json`, or equivalent:
 
 Then paste the [AGENTS.md blurb](#agentsmd-blurb) into your project's `CLAUDE.md` or `AGENTS.md`.
 
-## Tools (13)
+## Tools (16)
 
 | # | Tool | What it does |
 |---|------|-------------|
@@ -52,12 +57,14 @@ Then paste the [AGENTS.md blurb](#agentsmd-blurb) into your project's `CLAUDE.md
 | 9 | `release_file_reservations` | Release your file claims |
 | 10 | `list_agents` | Who's registered in this project? |
 | 11 | `check_reservations` | Read-only: who holds reservations on these paths? |
-| 12 | `store_context` | Store a large blob by key (schema, plan, file) |
-| 13 | `get_context` | Retrieve a stored blob by key |
+| 12 | `list_file_reservations` | List all active reservations in a project |
+| 13 | `store_context` | Store a large blob by key (schema, plan, file) |
+| 14 | `get_context` | Retrieve a stored blob by key |
+| 15 | `list_context_keys` | List all stored context keys |
 
 ## Beads integration
 
-This server handles **coordination** (messaging + file reservations). [Beads Rust](https://github.com/Dicklesworthstone/beads_rust) handles **task planning** (issues, priorities, dependencies). They connect through one convention:
+Hutch handles **coordination** (messaging + file reservations). [Beads Rust](https://github.com/Dicklesworthstone/beads_rust) handles **task planning** (issues, priorities, dependencies). They connect through one convention:
 
 **Use the Beads issue ID as `thread_id` in messages and `reason` in file reservations.**
 
@@ -87,7 +94,7 @@ You have two coordination systems. Use both.
 - `br update bd-XXXX --status in_progress` → claim a task
 - `br close bd-XXXX --reason "Done"` → complete a task
 
-### MCP Agent Mail — messaging & file reservations
+### Hutch — messaging & file reservations
 - `ensure_project` + `register_agent` on session start
 - `fetch_inbox` to check for messages from other agents
 - `list_agents` to see who else is working
@@ -111,7 +118,7 @@ You have two coordination systems. Use both.
 
 ## What was cut
 
-This is a 97% reduction of the original. See [SPEC.md](SPEC.md) for the full analysis, but in short: Git mirroring (3,384 LOC), web UI (13,665 LOC), CLI (5,134 LOC), static export (2,217 LOC), contact policies, window identities, product grouping, build slots, macros, LLM summarisation, 23 resource endpoints, circuit breakers, query tracking, and Rich logging panels were all removed. What remains is the coordination primitive.
+This is a 97% reduction of the original. Git mirroring, web UI, CLI, static export, contact policies, window identities, product grouping, build slots, macros, LLM summarisation, resource endpoints, circuit breakers, query tracking, and Rich logging panels were all removed. What remains is the coordination primitive.
 
 ## License
 
