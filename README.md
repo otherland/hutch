@@ -10,7 +10,7 @@
 [![PyPI](https://img.shields.io/pypi/v/hutch)](https://pypi.org/project/hutch/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[The problem](#the-problem) · [How it works](#how-it-works) · [Install](#install) · [Tools](#tools) · [Configuration](#configuration) · [MIT License](LICENSE)
+[The problem](#the-problem) · [How it works](#how-it-works) · [Install](#install) · [Tools](#tools) · [Hooks](#hooks) · [Configuration](#configuration) · [MIT License](LICENSE)
 
 ---
 
@@ -43,26 +43,26 @@ Everything lives in a single SQLite database. No Redis, no Postgres, no Docker. 
 ## Install
 
 ```bash
-pip install hutch
-hutch
-# → Hutch MCP server on http://127.0.0.1:8765
+pipx install hutch
+hutch serve
+# → Hutch MCP server on http://127.0.0.1:4718/mcp
 ```
 
 Then point your agents at it. Hutch speaks MCP, so any agent that supports MCP servers can connect.
 
 **Claude Code** — `.claude/settings.json`:
 ```json
-{ "mcpServers": { "hutch": { "url": "http://127.0.0.1:8765/mcp" } } }
+{ "mcpServers": { "hutch": { "url": "http://127.0.0.1:4718/mcp" } } }
 ```
 
 **Cursor** — `.cursor/mcp.json`:
 ```json
-{ "mcpServers": { "hutch": { "url": "http://127.0.0.1:8765/mcp" } } }
+{ "mcpServers": { "hutch": { "url": "http://127.0.0.1:4718/mcp" } } }
 ```
 
-**Codex / Copilot / any MCP client** — point it at `http://127.0.0.1:8765/mcp`.
+**Codex / Copilot / any MCP client** — point it at `http://127.0.0.1:4718/mcp`.
 
-Then paste the [agent instructions](#agent-instructions) into your project's `CLAUDE.md`, `AGENTS.md`, or equivalent system prompt.
+Then either set up [hooks](#hooks) (recommended) or paste the [agent instructions](#agent-instructions) into your project's `CLAUDE.md`, `AGENTS.md`, or equivalent system prompt.
 
 ## Tools
 
@@ -119,16 +119,61 @@ send_message(
 ## Configuration
 
 ```bash
-export HUTCH_DB_PATH=./hutch.db   # default
-export HUTCH_HOST=127.0.0.1       # default
-export HUTCH_PORT=8765             # default
+hutch serve                        # defaults below
+hutch serve --port 9000            # override via flag
+export HUTCH_DB_PATH=./hutch.db    # default
+export HUTCH_HOST=127.0.0.1        # default
+export HUTCH_PORT=4718              # default
 ```
 
-That's it. No config files, no tokens, no setup.
+## Hooks
 
-## Agent instructions
+Hooks automate the coordination protocol — registration, file reservations, and cleanup happen automatically on session start/end and before file edits. No pasting instructions.
 
-Paste this into your project's `CLAUDE.md`, `AGENTS.md`, or system prompt:
+Hutch ships hook configs for Claude Code and GitHub Copilot in `examples/`. Copy the relevant one into your project:
+
+**Claude Code** — merge into `.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "hutch hooks session-start", "timeout": 10 }] }],
+    "PreToolUse": [{ "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": "hutch hooks pre-edit", "timeout": 5 }] }],
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "hutch hooks session-end", "timeout": 10 }] }]
+  }
+}
+```
+
+**GitHub Copilot** — save as `.github/hooks/hooks.json`:
+```json
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [{ "type": "command", "bash": "hutch hooks session-start", "timeoutSec": 10, "env": { "HUTCH_PROGRAM": "copilot" } }],
+    "preToolUse": [{ "type": "command", "bash": "hutch hooks pre-edit", "timeoutSec": 5, "env": { "HUTCH_PROGRAM": "copilot" } }],
+    "sessionEnd": [{ "type": "command", "bash": "hutch hooks session-end", "timeoutSec": 10, "env": { "HUTCH_PROGRAM": "copilot" } }]
+  }
+}
+```
+
+What the hooks do:
+- **session-start**: registers the project and agent, checks inbox for unread messages
+- **pre-edit**: checks file reservations before editing, warns on conflicts, claims the file
+- **session-end**: releases all file reservations
+
+With hooks, the only instructions you need are for the judgment calls hooks can't automate:
+
+```markdown
+## Hutch — agent coordination
+
+While working:
+- `send_message` to announce what you're doing (use thread_id to group related messages)
+- `store_context` for schemas, plans, or large outputs other agents might need
+- When done, `send_message` summarising what changed
+```
+
+## Agent instructions (without hooks)
+
+If your agent doesn't support hooks, paste this into `CLAUDE.md`, `AGENTS.md`, or equivalent:
 
 ```markdown
 ## Hutch — agent coordination

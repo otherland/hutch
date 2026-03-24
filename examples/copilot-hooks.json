@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "hutch hooks session-start",
+        "timeoutSec": 10,
+        "env": {
+          "HUTCH_PROGRAM": "copilot"
+        }
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "hutch hooks pre-edit",
+        "timeoutSec": 5,
+        "env": {
+          "HUTCH_PROGRAM": "copilot"
+        }
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "hutch hooks session-end",
+        "timeoutSec": 10,
+        "env": {
+          "HUTCH_PROGRAM": "copilot"
+        }
+      }
+    ]
+  }
+}
